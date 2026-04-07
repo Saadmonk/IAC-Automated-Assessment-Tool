@@ -10,6 +10,7 @@ import sys, os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.session import init_session, get_utility_rates
+from utils.arc_defaults import get_defaults
 from arcs.arc_2_4146_vfd import compute_vfd_savings
 
 st.set_page_config(page_title="ARC 2.4146 — VFD", layout="wide")
@@ -18,14 +19,15 @@ init_session()
 st.title("AR: Variable Frequency Drive (ARC 2.4146)")
 st.caption("Apply affinity laws to estimate energy savings from adding VFDs to motor-driven equipment.")
 
+_defs = get_defaults("2.4146")
+
 with st.expander("📝 Observation & Recommendation", expanded=True):
     c1, c2 = st.columns(2)
     ar_num = c1.text_input("AR Number", value=st.session_state.get("vfd_ar_num","AR-1"), key="vfd_ar_num")
-    obs = c1.text_area("Observation", value=st.session_state.get("vfd_obs",""), height=100, key="vfd_obs",
-                       placeholder="Describe motors running at fixed speed, throttling valves used for flow control…")
-    rec = c2.text_area("Recommendation", value=st.session_state.get("vfd_rec",""), height=100, key="vfd_rec")
+    obs = c1.text_area("Observation", value=st.session_state.get("vfd_obs", _defs["observation"]), height=100, key="vfd_obs")
+    rec = c2.text_area("Recommendation", value=st.session_state.get("vfd_rec", _defs["recommendation"]), height=100, key="vfd_rec")
     tech = c2.text_area("Technology Description",
-                        value=st.session_state.get("vfd_tech","Variable Frequency Drives (VFDs) control motor speed by varying the electrical supply frequency. Per the affinity laws, fan/pump power scales with the cube of the speed ratio: P₂/P₁ = (N₂/N₁)³. A 20% speed reduction results in approximately 49% power reduction, yielding significant energy savings for variable-load applications."),
+                        value=st.session_state.get("vfd_tech", _defs["tech_description"]),
                         height=100, key="vfd_tech")
 
 rates = get_utility_rates()

@@ -7,6 +7,7 @@ import sys, os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.session import init_session, get_utility_rates
+from utils.arc_defaults import get_defaults
 from arcs.arc_2_4236_compressed_air import compute_leak_savings, leak_flow_cfm
 
 st.set_page_config(page_title="ARC 2.4236 — Compressed Air Leaks", layout="wide")
@@ -15,15 +16,15 @@ init_session()
 st.title("AR: Fix Compressed Air Leaks (ARC 2.4236)")
 st.caption("Estimate compressor energy wasted through unrepaired leaks using orifice flow equations.")
 
+_defs = get_defaults("2.4236")
+
 with st.expander("📝 Observation & Recommendation", expanded=True):
     c1, c2 = st.columns(2)
     ar_num = c1.text_input("AR Number", value=st.session_state.get("ca_ar_num","AR-1"), key="ca_ar_num")
-    obs = c1.text_area("Observation", value=st.session_state.get("ca_obs",""), height=100, key="ca_obs",
-                       placeholder="Number of leaks found, survey method (ultrasonic detector), locations…")
-    rec = c2.text_area("Recommendation", value=st.session_state.get("ca_rec",""), height=100, key="ca_rec",
-                       placeholder="Repair/replace leaking fittings, implement periodic leak survey…")
+    obs = c1.text_area("Observation", value=st.session_state.get("ca_obs", _defs["observation"]), height=100, key="ca_obs")
+    rec = c2.text_area("Recommendation", value=st.session_state.get("ca_rec", _defs["recommendation"]), height=100, key="ca_rec")
     tech = c2.text_area("Technology Description",
-                        value=st.session_state.get("ca_tech","Compressed air leaks represent one of the largest energy wastes in industrial facilities. A leak the size of a 1/8\" hole at 100 psig wastes approximately 25 CFM of air. Using an ultrasonic leak detector, all significant leaks can be tagged and repaired. The energy cost of the leak is calculated from the compressor power required to generate the lost airflow."),
+                        value=st.session_state.get("ca_tech", _defs["tech_description"]),
                         height=100, key="ca_tech")
 
 st.subheader("System Parameters")

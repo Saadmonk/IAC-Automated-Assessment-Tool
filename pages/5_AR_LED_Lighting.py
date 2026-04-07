@@ -8,6 +8,7 @@ import sys, os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 from utils.session import init_session, get_utility_rates
+from utils.arc_defaults import get_defaults
 from arcs.arc_2_7142_lighting import compute_lighting_savings, LAMP_EFFICACY
 
 st.set_page_config(page_title="ARC 2.7142 — LED Lighting", layout="wide")
@@ -16,18 +17,18 @@ init_session()
 st.title("AR: LED Lighting Upgrade (ARC 2.7142)")
 st.caption("Replace existing inefficient lamps with energy-efficient LED alternatives.")
 
+_defs = get_defaults("2.7142")
+
 # ── Narrative ────────────────────────────────────────────────────────────────
 with st.expander("📝 Observation & Recommendation", expanded=True):
     c1, c2 = st.columns(2)
     ar_num = c1.text_input("AR Number", value=st.session_state.get("led_ar_num", "AR-1"), key="led_ar_num")
-    obs = c1.text_area("Observation", value=st.session_state.get("led_obs", ""),
-                       height=100, key="led_obs",
-                       placeholder="Describe existing lighting inventory, lamp types, condition…")
-    rec = c2.text_area("Recommendation", value=st.session_state.get("led_rec", ""),
-                       height=100, key="led_rec",
-                       placeholder="Recommend LED replacement, estimated payback, rebates…")
+    obs = c1.text_area("Observation", value=st.session_state.get("led_obs", _defs["observation"]),
+                       height=100, key="led_obs")
+    rec = c2.text_area("Recommendation", value=st.session_state.get("led_rec", _defs["recommendation"]),
+                       height=100, key="led_rec")
     tech = c2.text_area("Technology Description",
-                        value=st.session_state.get("led_tech", "LED (Light Emitting Diode) technology produces light through solid-state electroluminescence, achieving efficiencies of 100–150 lm/W compared to 70–90 lm/W for fluorescent and 15 lm/W for incandescent lamps. LEDs also have significantly longer rated lifetimes (50,000+ hours), reducing maintenance costs."),
+                        value=st.session_state.get("led_tech", _defs["tech_description"]),
                         height=100, key="led_tech")
 
 # ── Global Defaults ──────────────────────────────────────────────────────────

@@ -32,13 +32,19 @@ def billing_table(rows_key, columns, display_names, format_map=None):
             display_names[0]: st.column_config.TextColumn("Month", disabled=True, width="small"),
         }
     )
-    # Write back
+    # Write back + validate
+    has_negatives = False
     for i, row in enumerate(rows):
         for col_key, col_name in zip(columns[1:], display_names[1:]):
             try:
-                rows[i][col_key] = float(edited.iloc[i][col_name])
+                val = float(edited.iloc[i][col_name])
+                if val < 0:
+                    has_negatives = True
+                rows[i][col_key] = val
             except Exception:
                 pass
+    if has_negatives:
+        st.warning("⚠️ Negative values detected in billing table. Please verify — billing amounts should be ≥ 0.")
     st.session_state[rows_key] = rows
     return rows
 
@@ -107,7 +113,23 @@ with tab2:
         c2.metric("Avg Gas Rate", f"${gas_rate:.3f}/MMBtu")
         c3.metric("Annual Gas Total", f"${ann_gtot:,.2f}")
 
-        st.info(f"📊 **Average Natural Gas Rate** = ${gas_rate:.3f} /MMBtu")
+        # UAT Bug Fix: warn if values look like therms instead of MMBtu
+        # 1 therm = 0.1 MMBtu, so annual usage >20,000 MMBtu is suspicious
+        if ann_mmbtu > 0:
+            avg_monthly = ann_mmbtu / 12
+            if avg_monthly > 500:
+                st.info(f"📊 **Average Natural Gas Rate** = ${gas_rate:.3f} /MMBtu")
+            elif 0 < avg_monthly < 5:
+                st.warning(
+                    "⚠️ **Gas unit check:** Monthly average is {:.1f} MMBtu, which seems low. "
+                    "If your bill is in **therms**, convert: 1 therm = 0.1 MMBtu. "
+                    "10 therms = 1 MMBtu.".format(avg_monthly)
+                )
+                st.info(f"📊 **Average Natural Gas Rate** = ${gas_rate:.3f} /MMBtu")
+            else:
+                st.info(f"📊 **Average Natural Gas Rate** = ${gas_rate:.3f} /MMBtu")
+        else:
+            st.info(f"📊 **Average Natural Gas Rate** = ${gas_rate:.3f} /MMBtu")
     else:
         st.info("No natural gas data to enter.")
 

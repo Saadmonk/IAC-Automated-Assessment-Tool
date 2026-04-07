@@ -10,3 +10,4 @@ scikit-learn>=1.4
 statsmodels>=0.14
 python-docx>=1.1
 CoolProp>=6.4
+nrel-pysam>=3.0

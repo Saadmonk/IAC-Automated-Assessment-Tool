@@ -19,6 +19,54 @@ import warnings
 warnings.filterwarnings("ignore")
 
 
+# ── Smart meter data preparation ──────────────────────────────────────────────
+
+def prepare_smart_meter_data(
+    df_raw: pd.DataFrame,
+    time_col: str,
+    kwh_col: str,
+    interval: str,             # "daily" | "hourly" | "15-min"
+) -> pd.DataFrame:
+    """
+    Aggregate smart meter CSV to daily kWh.
+    Returns DataFrame with columns: date (datetime), kwh_daily
+    """
+    df = df_raw[[time_col, kwh_col]].copy()
+    df.columns = ["timestamp", "kwh"]
+    df["kwh"] = pd.to_numeric(df["kwh"], errors="coerce")
+    df["timestamp"] = pd.to_datetime(df["timestamp"], infer_datetime_format=True, errors="coerce")
+    df = df.dropna(subset=["timestamp", "kwh"])
+    df["date"] = df["timestamp"].dt.normalize()
+
+    if interval == "daily":
+        # Already daily — just sum in case of duplicates
+        daily = df.groupby("date")["kwh"].sum().reset_index()
+    else:
+        # hourly or 15-min: sum up to daily totals
+        daily = df.groupby("date")["kwh"].sum().reset_index()
+
+    daily.columns = ["date", "kwh_daily"]
+    daily = daily.sort_values("date").reset_index(drop=True)
+    return daily
+
+
+def merge_weather_and_meter(
+    df_meter: pd.DataFrame,    # from prepare_smart_meter_data: date, kwh_daily
+    df_weather: pd.DataFrame,  # from weather.get_daily_temps: date, avg_temp_f
+) -> pd.DataFrame:
+    """
+    Inner-join meter data with weather on date.
+    Returns DataFrame with: date, kwh_daily, avg_temp_f
+    """
+    df_weather = df_weather.copy()
+    df_weather["date"] = pd.to_datetime(df_weather["date"]).dt.normalize()
+    df_meter = df_meter.copy()
+    df_meter["date"] = pd.to_datetime(df_meter["date"]).dt.normalize()
+    merged = pd.merge(df_meter, df_weather[["date", "avg_temp_f"]], on="date", how="inner")
+    merged = merged.dropna().reset_index(drop=True)
+    return merged
+
+
 # ── Model functions ────────────────────────────────────────────────────────────
 
 def model_2P(T, b0):

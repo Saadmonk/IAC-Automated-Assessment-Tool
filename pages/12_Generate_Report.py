@@ -89,8 +89,11 @@ with st.expander("💾 Export / Import Session Data (JSON)"):
     st.markdown("Export all entered data as JSON to save progress or transfer to another machine.")
 
     if st.button("Export Session JSON", key="exp_json"):
-        # Filter out non-serializable items
+        import pandas as pd
+        # Filter out non-serializable items (DataFrames, etc.)
         def safe_serialize(obj):
+            if isinstance(obj, pd.DataFrame):
+                return obj.to_dict("records")  # serialize DataFrames as list of dicts
             try:
                 json.dumps(obj)
                 return obj
@@ -103,7 +106,7 @@ with st.expander("💾 Export / Import Session Data (JSON)"):
             "other_students","annual_sales","num_employees",
             "facility_description","process_description","best_practices",
             "elec_used_for","gas_used_for","equipment_rows","schedule_rows",
-            "elec_rows","gas_rows","water_rows","has_gas","has_water","ar_list",
+            "elec_rows","gas_rows","water_rows","has_gas","has_water","ar_list","smart_meter_df",
         ]
         export_data = {}
         for k in export_keys:
